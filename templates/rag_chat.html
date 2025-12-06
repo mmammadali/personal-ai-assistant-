@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دستیار اسناد هوشمند - RAG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Persian Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <span>دستیار هوشمند</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <h3 class="nav-title">انتخاب دستیار</h3>
+                <a href="/" class="nav-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>مدیریت وظایف و رویدادها</span>
+                </a>
+                <a href="/rag" class="nav-item active">
+                    <i class="fas fa-file-alt"></i>
+                    <span>مدیریت اسناد (RAG)</span>
+                </a>
+                <a href="/finance" class="nav-item">
+                    <i class="fas fa-coins"></i>
+                    <span>مدیر مالی (Finance)</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p class="version">نسخه 2.0.0</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container">
+                <!-- Header -->
+                <header class="chat-header">
+                    <div class="header-content">
+                        <div class="header-left">
+                            <div class="header-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="header-info">
+                                <h1>دستیار مدیریت اسناد</h1>
+                                <p class="status">
+                                    <span class="status-dot"></span>
+                                    آنلاین - RAG Agent
+                                </p>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <button class="icon-btn" id="uploadBtn" title="بارگذاری سند">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="حالت تاریک/روشن">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                            <button class="icon-btn" id="clearBtn" title="پاک کردن گفتگو">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Chat Container -->
+                <main class="chat-container" id="chatContainer">
+                    <!-- Welcome Message -->
+                    <div class="welcome-section">
+                        <div class="welcome-icon">
+                            <i class="fas fa-file-upload"></i>
+                        </div>
+                        <h2>به دستیار مدیریت اسناد خوش آمدید</h2>
+                        <p>من می‌توانم اسناد شما را بارگذاری، تحلیل، خلاصه‌سازی و به سوالات شما درباره محتوای آن‌ها پاسخ دهم.</p>
+                        
+                        <div class="upload-section">
+                            <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt,.md,.xlsx,.xls,.pptx,.ppt,.jpg,.jpeg,.png" hidden>
+                            <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>بارگذاری سند</span>
+                            </button>
+                            <p class="upload-hint">
+                                فرمت‌های پشتیبانی شده: PDF, DOCX, TXT, Excel, PowerPoint, تصاویر
+                            </p>
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <h3>دسترسی سریع</h3>
+                            <div class="action-grid">
+                                <button class="action-card" data-prompt="لیست اسناد من را نشان بده">
+                                    <i class="fas fa-list"></i>
+                                    <span>نمایش اسناد</span>
+                                </button>
+                                <button class="action-card" data-prompt="خلاصه‌ای از آخرین سند بارگذاری شده بده">
+                                    <i class="fas fa-file-invoice"></i>
+                                    <span>خلاصه سند</span>
+                                </button>
+                                <button class="action-card" data-prompt="این سند درباره چیست؟">
+                                    <i class="fas fa-question-circle"></i>
+                                    <span>پرسش از سند</span>
+                                </button>
+                                <button class="action-card" data-prompt="تاریخ‌های مهم در این سند چیست؟">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>استخراج تاریخ‌ها</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages will be appended here -->
+                </main>
+
+                <!-- Input Area -->
+                <footer class="chat-input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="messageInput" 
+                            class="message-input" 
+                            placeholder="سوال خود را درباره اسناد بپرسید... (Enter برای ارسال، Shift+Enter برای خط جدید)"
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" title="ارسال پیام">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-info">
+                        <span class="input-hint">
+                            <i class="fas fa-info-circle"></i>
+                            پشتیبانی از اسناد فارسی و انگلیسی
+                        </span>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- Upload Progress Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>در حال بارگذاری سند...</h3>
+            </div>
+            <div class="modal-body">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">لطفاً صبر کنید...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/rag_chat.js') }}"></script>
+</body>
+</html>
+

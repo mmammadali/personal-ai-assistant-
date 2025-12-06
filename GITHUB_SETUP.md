@@ -46,9 +46,38 @@ choco install git
 When pushing for the first time, GitHub will require authentication:
 
 ### Option 1: Personal Access Token (Recommended)
-1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Generate a new token with `repo` scope
-3. Use the token as your password when prompted
+
+**Step-by-Step Guide to Create a Personal Access Token:**
+
+1. **Go to GitHub Token Settings**
+   - Direct link: https://github.com/settings/tokens
+   - Or navigate: GitHub → Your Profile Picture (top right) → **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
+
+2. **Generate New Token**
+   - Click the **"Generate new token"** button
+   - Select **"Generate new token (classic)"**
+
+3. **Configure Your Token**
+   - **Note**: Give it a descriptive name (e.g., "Push to personal-ai-assistant repo")
+   - **Expiration**: Choose how long the token should be valid:
+     - 30 days, 60 days, 90 days
+     - Or "No expiration" (less secure but convenient)
+   - **Select scopes**: Check the **`repo`** checkbox
+     - This gives full control of private repositories
+     - Includes: repo:status, repo_deployment, public_repo, repo:invite, security_events
+
+4. **Generate and Copy Token**
+   - Scroll down and click **"Generate token"** (green button at the bottom)
+   - **IMPORTANT**: Copy the token immediately! It looks like: `ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+   - You won't be able to see it again after you leave the page
+   - Save it somewhere safe (password manager, secure note, etc.)
+
+5. **Use the Token**
+   - When Git prompts you for credentials during `git push`:
+     - **Username**: Your GitHub username (`mmammadali`)
+     - **Password**: Paste your Personal Access Token (NOT your GitHub password)
+
+**Security Note**: Treat your Personal Access Token like a password. Never share it or commit it to your repository.
 
 ### Option 2: GitHub Desktop
 Install GitHub Desktop for a GUI-based approach:

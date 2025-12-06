@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-12-04T05:40:27.071052",
+  "results": {
+    "passed": [
+      "1. Server Health Check",
+      "12. Database Test",
+      "14. OCR Tools"
+    ],
+    "failed": [
+      "2. Finance Page Loads",
+      "3. Basic Finance Chat",
+      "4. Balance Query",
+      "5. Transaction Query",
+      "6. Exchange Rate Query",
+      "7. Report Query",
+      "8. Balance API",
+      "9. Transactions API",
+      "10. Clear Session",
+      "11. Direct Agent Test",
+      "13. Transaction Tools",
+      "15. Exchange Rate Tools"
+    ],
+    "warnings": []
+  },
+  "summary": {
+    "total": 15,
+    "passed": 3,
+    "failed": 12,
+    "warnings": 0,
+    "success_rate": 20.0
+  }
+}

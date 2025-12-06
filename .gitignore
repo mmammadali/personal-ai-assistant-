@@ -30,3 +30,13 @@ Thumbs.db
 
 # Logs
 *.log
+
+# RAG Agent - Vector Database & Uploads
+chroma_db/
+uploads/
+*.index
+*.faiss
+
+# Temporary files
+temp/
+tmp/

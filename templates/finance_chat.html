@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیر مالی هوشمند - Finance Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Persian Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Persian Date Picker - Using jdatepicker (simple and reliable) -->
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/jdatepicker@master/dist/jquery.Bootstrap-PersianDateTimePicker.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/rastikerdar/jdatepicker@master/dist/jquery.Bootstrap-PersianDateTimePicker.js"></script>
+    <style>
+        /* Persian Date Picker Custom Styles */
+        .pdp-container {
+            direction: rtl;
+            font-family: 'Vazirmatn', sans-serif;
+            z-index: 10000;
+        }
+        .pdp-element {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .pdp-header {
+            background: var(--accent-primary);
+            color: white;
+        }
+        .jalali-date-input {
+            cursor: pointer;
+            background-color: var(--bg-primary);
+            position: relative;
+        }
+        .jalali-date-input:hover {
+            border-color: var(--accent-primary);
+        }
+        .date-picker-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+        .form-group {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <span>دستیار هوشمند</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <h3 class="nav-title">انتخاب دستیار</h3>
+                <a href="/" class="nav-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>مدیریت وظایف و رویدادها</span>
+                </a>
+                <a href="/rag" class="nav-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>مدیریت اسناد (RAG)</span>
+                </a>
+                <a href="/finance" class="nav-item active">
+                    <i class="fas fa-coins"></i>
+                    <span>مدیر مالی (Finance)</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p class="version">نسخه 2.0.0</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container">
+                <!-- Header -->
+                <header class="chat-header">
+                    <div class="header-content">
+                        <div class="header-left">
+                            <div class="header-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="header-info">
+                                <h1>مدیر مالی هوشمند</h1>
+                                <p class="status">
+                                    <span class="status-dot"></span>
+                                    آنلاین - Finance Agent
+                                </p>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <button class="icon-btn" id="uploadBtn" title="بارگذاری رسید/فاکتور">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="حالت تاریک/روشن">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                            <button class="icon-btn" id="clearBtn" title="پاک کردن گفتگو">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Chat Container -->
+                <main class="chat-container" id="chatContainer">
+                    <!-- Welcome Message -->
+                    <div class="welcome-section">
+                        <div class="welcome-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <h2>به مدیر مالی هوشمند خوش آمدید</h2>
+                        <p>من اینجا هستم تا به شما در مدیریت مالی کسب‌وکار کمک کنم. می‌توانم رسیدها و فاکتورها را پردازش کنم، تراکنش‌های مالی را مدیریت کنم، موجودی را نمایش دهم و گزارش‌های مالی تولید کنم.</p>
+                        
+                        <div class="upload-section">
+                            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                            <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>بارگذاری رسید یا فاکتور</span>
+                            </button>
+                            <p class="upload-hint">
+                                فرمت‌های پشتیبانی شده: PDF, JPG, JPEG, PNG
+                            </p>
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <h3>دسترسی سریع</h3>
+                            <div class="action-grid">
+                                <button class="action-card" id="createAccountBtn">
+                                    <i class="fas fa-plus-square"></i>
+                                    <span>ایجاد حساب</span>
+                                </button>
+                                <button class="action-card" data-prompt="موجودی من چقدر است؟">
+                                    <i class="fas fa-wallet"></i>
+                                    <span>مشاهده موجودی</span>
+                                </button>
+                                <button class="action-card" data-prompt="می‌خواهم یک هزینه ثبت کنم">
+                                    <i class="fas fa-minus-circle"></i>
+                                    <span>ثبت هزینه</span>
+                                </button>
+                                <button class="action-card" data-prompt="می‌خواهم یک درآمد ثبت کنم">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>ثبت درآمد</span>
+                                </button>
+                                <button class="action-card" id="reportQuickAccessBtn">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>گزارش مالی</span>
+                                </button>
+                                <button class="action-card" data-prompt="نرخ دلار و یورو چقدر است؟">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    <span>نرخ ارز</span>
+                                </button>
+                                <button class="action-card" data-prompt="چه کارهایی می‌توانی برای من انجام دهی؟">
+                                    <i class="fas fa-question-circle"></i>
+                                    <span>راهنما</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages will be appended here -->
+                </main>
+
+                <!-- Input Area -->
+                <footer class="chat-input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="messageInput" 
+                            class="message-input" 
+                            placeholder="پیام خود را اینجا بنویسید... (Enter برای ارسال، Shift+Enter برای خط جدید)"
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" title="ارسال پیام">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-info">
+                        <span class="input-hint">
+                            <i class="fas fa-info-circle"></i>
+                            پشتیبانی از فارسی و انگلیسی
+                        </span>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- Upload Progress Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>در حال بارگذاری سند...</h3>
+            </div>
+            <div class="modal-body">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">لطفاً صبر کنید...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Period Selector Modal -->
+    <div class="modal" id="datePeriodModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>انتخاب دوره گزارش</h3>
+                <button class="modal-close" id="closeDateModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="datePeriodForm">
+                    <div class="form-group">
+                        <label for="dateFrom">از تاریخ (شروع)</label>
+                        <div style="position: relative;">
+                            <input type="text" id="dateFrom" name="date_from" class="jalali-date-input" placeholder="1403/01/01" required readonly>
+                            <i class="fas fa-calendar-alt date-picker-icon"></i>
+                        </div>
+                        <small class="form-hint">برای انتخاب تاریخ کلیک کنید</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dateTo">تا تاریخ (پایان)</label>
+                        <div style="position: relative;">
+                            <input type="text" id="dateTo" name="date_to" class="jalali-date-input" placeholder="1403/01/31" required readonly>
+                            <i class="fas fa-calendar-alt date-picker-icon"></i>
+                        </div>
+                        <small class="form-hint">برای انتخاب تاریخ کلیک کنید</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>دوره‌های پیشنهادی</label>
+                        <div class="quick-date-buttons" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                            <button type="button" class="btn-quick-date" data-period="today">امروز</button>
+                            <button type="button" class="btn-quick-date" data-period="week">این هفته</button>
+                            <button type="button" class="btn-quick-date" data-period="month">این ماه</button>
+                            <button type="button" class="btn-quick-date" data-period="last_month">ماه قبل</button>
+                            <button type="button" class="btn-quick-date" data-period="quarter">این سه‌ماهه</button>
+                            <button type="button" class="btn-quick-date" data-period="year">امسال</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelDateBtn">لغو</button>
+                        <button type="submit" class="btn-primary">تولید گزارش</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Account Modal -->
+    <div class="modal" id="createAccountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ایجاد حساب جدید</h3>
+                <button class="modal-close" id="closeAccountModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createAccountForm">
+                    <div class="form-group">
+                        <label for="accountName">نام حساب *</label>
+                        <input type="text" id="accountName" name="name" placeholder="مثال: حساب بانکی ملی" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="accountType">نوع حساب *</label>
+                        <select id="accountType" name="type" required>
+                            <option value="bank">حساب بانکی</option>
+                            <option value="cash">نقدی</option>
+                            <option value="credit_card">کارت اعتباری</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="accountCurrency">ارز</label>
+                        <select id="accountCurrency" name="currency">
+                            <option value="IRR" selected>ریال (IRR)</option>
+                            <option value="USD">دلار (USD)</option>
+                            <option value="EUR">یورو (EUR)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="initialBalance">موجودی اولیه</label>
+                        <div class="balance-input-group">
+                            <input type="number" id="initialBalance" name="initial_balance" placeholder="0" min="0" step="0.01" value="0">
+                            <select id="balanceUnit" name="unit">
+                                <option value="rial" selected>ریال</option>
+                                <option value="toman">تومان</option>
+                            </select>
+                        </div>
+                        <small class="form-hint">1 تومان = 10 ریال</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelAccountBtn">لغو</button>
+                        <button type="submit" class="btn-primary">ایجاد حساب</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/finance_chat.js') }}"></script>
+</body>
+</html>

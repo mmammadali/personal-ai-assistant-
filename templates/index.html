@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دستیار هوشمند مدیران ایرانی</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Persian Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <span>دستیار هوشمند</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <h3 class="nav-title">انتخاب دستیار</h3>
+                <a href="/" class="nav-item active">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>مدیریت وظایف و رویدادها</span>
+                </a>
+                <a href="/rag" class="nav-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>مدیریت اسناد (RAG)</span>
+                </a>
+                <a href="/finance" class="nav-item">
+                    <i class="fas fa-coins"></i>
+                    <span>مدیر مالی (Finance)</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p class="version">نسخه 2.0.0</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container">
+                <!-- Header -->
+                <header class="chat-header">
+                    <div class="header-content">
+                        <div class="header-left">
+                            <div class="header-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="header-info">
+                                <h1>دستیار مدیریت وظایف</h1>
+                                <p class="status">
+                                    <span class="status-dot"></span>
+                                    آنلاین
+                                </p>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="حالت تاریک/روشن">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                            <button class="icon-btn" id="clearBtn" title="پاک کردن گفتگو">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Chat Container -->
+                <main class="chat-container" id="chatContainer">
+                    <!-- Welcome Message -->
+                    <div class="welcome-section">
+                        <div class="welcome-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h2>به دستیار هوشمند خود خوش آمدید</h2>
+                        <p>من اینجا هستم تا به شما در مدیریت رویدادها، وظایف و برنامه‌ریزی با تقویم جلالی کمک کنم. چطور می‌توانم به شما کمک کنم؟</p>
+                        
+                        <div class="quick-actions">
+                            <h3>دسترسی سریع</h3>
+                            <div class="action-grid">
+                                <button class="action-card" data-prompt="تمام رویدادهای من را نشان بده">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>مشاهده رویدادها</span>
+                                </button>
+                                <button class="action-card" data-prompt="تمام وظایف من را نشان بده">
+                                    <i class="fas fa-tasks"></i>
+                                    <span>مشاهده وظایف</span>
+                                </button>
+                                <button class="action-card" data-prompt="یک رویداد برای فردا ایجاد کن">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>رویداد جدید</span>
+                                </button>
+                                <button class="action-card" data-prompt="تاریخ امروز در تقویم جلالی چیست؟">
+                                    <i class="fas fa-clock"></i>
+                                    <span>تاریخ امروز</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages will be appended here -->
+                </main>
+
+                <!-- Input Area -->
+                <footer class="chat-input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="messageInput" 
+                            class="message-input" 
+                            placeholder="پیام خود را اینجا بنویسید... (Enter برای ارسال، Shift+Enter برای خط جدید)"
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" title="ارسال پیام">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-info">
+                        <span class="input-hint">
+                            <i class="fas fa-info-circle"></i>
+                            پشتیبانی از فارسی و انگلیسی
+                        </span>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>
+
