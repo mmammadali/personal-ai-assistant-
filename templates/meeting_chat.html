@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت جلسات هوشمند - Meeting Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Persian Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <span>دستیار هوشمند</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <h3 class="nav-title">انتخاب دستیار</h3>
+                <a href="/" class="nav-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>مدیریت وظایف و رویدادها</span>
+                </a>
+                <a href="/rag" class="nav-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>مدیریت اسناد (RAG)</span>
+                </a>
+                <a href="/finance" class="nav-item">
+                    <i class="fas fa-coins"></i>
+                    <span>مدیر مالی (Finance)</span>
+                </a>
+                <a href="/meeting" class="nav-item active">
+                    <i class="fas fa-microphone"></i>
+                    <span>مدیریت جلسات (Meeting)</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p class="version">نسخه 2.0.0</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container">
+                <!-- Header -->
+                <header class="chat-header">
+                    <div class="header-content">
+                        <div class="header-left">
+                            <div class="header-icon">
+                                <i class="fas fa-microphone"></i>
+                            </div>
+                            <div class="header-info">
+                                <h1>دستیار مدیریت جلسات</h1>
+                                <p class="status">
+                                    <span class="status-dot"></span>
+                                    آنلاین
+                                </p>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <button class="icon-btn" id="uploadBtn" title="بارگذاری فایل صوتی">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="حالت تاریک/روشن">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                            <button class="icon-btn" id="clearBtn" title="پاک کردن گفتگو">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Chat Container -->
+                <main class="chat-container" id="chatContainer">
+                    <!-- Welcome Message -->
+                    <div class="welcome-section">
+                        <div class="welcome-icon">
+                            <i class="fas fa-microphone-alt"></i>
+                        </div>
+                        <h2>به دستیار مدیریت جلسات خوش آمدید</h2>
+                        <p>من اینجا هستم تا به شما در رونویسی جلسات، استخراج اقدامات، تولید خلاصه و تحلیل جلسات کمک کنم.</p>
+                        
+                        <div class="quick-actions">
+                            <h3>دسترسی سریع</h3>
+                            <div class="action-grid">
+                                <button class="action-card" data-prompt="تمام جلسات من را نشان بده">
+                                    <i class="fas fa-list"></i>
+                                    <span>مشاهده جلسات</span>
+                                </button>
+                                <button class="action-card" data-prompt="اقدامات در حال انتظار را نشان بده">
+                                    <i class="fas fa-tasks"></i>
+                                    <span>اقدامات در انتظار</span>
+                                </button>
+                                <button class="action-card" id="uploadActionBtn">
+                                    <i class="fas fa-upload"></i>
+                                    <span>بارگذاری فایل صوتی</span>
+                                </button>
+                                <button class="action-card" data-prompt="تحلیل جلسات من را نشان بده">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>تحلیل جلسات</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages will be appended here -->
+                </main>
+
+                <!-- Input Area -->
+                <footer class="chat-input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="messageInput" 
+                            class="message-input" 
+                            placeholder="پیام خود را اینجا بنویسید... (Enter برای ارسال، Shift+Enter برای خط جدید)"
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" title="ارسال پیام">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-info">
+                        <span class="input-hint">
+                            <i class="fas fa-info-circle"></i>
+                            پشتیبانی از فارسی و انگلیسی | فرمت‌های صوتی: MP3, WAV, M4A
+                        </span>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>بارگذاری فایل صوتی جلسه</h3>
+                <button class="modal-close" id="closeUploadModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="audioFile">فایل صوتی *</label>
+                        <input type="file" id="audioFile" name="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac" required>
+                        <small class="form-hint">فرمت‌های پشتیبانی شده: MP3, WAV, M4A, AAC, OGG, FLAC</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="meetingTitle">عنوان جلسه *</label>
+                        <input type="text" id="meetingTitle" name="title" placeholder="مثال: جلسه تیم توسعه" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="meetingDate">تاریخ جلسه</label>
+                        <input type="text" id="meetingDate" name="date" placeholder="1403-09-15 (خالی = امروز)">
+                        <small class="form-hint">فرمت: YYYY-MM-DD (جلالی) - اگر خالی بگذارید، تاریخ امروز استفاده می‌شود</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelUploadBtn">لغو</button>
+                        <button type="submit" class="btn-primary">بارگذاری و رونویسی</button>
+                    </div>
+                </form>
+                
+                <div id="uploadProgress" style="display: none; margin-top: 20px;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">در حال بارگذاری...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script>
+        // Meeting-specific chat functionality
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadModal = document.getElementById('uploadModal');
+        const closeUploadModal = document.getElementById('closeUploadModal');
+        const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadActionBtn = document.getElementById('uploadActionBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Open upload modal
+        uploadBtn.addEventListener('click', () => {
+            uploadModal.style.display = 'flex';
+        });
+
+        uploadActionBtn.addEventListener('click', () => {
+            uploadModal.style.display = 'flex';
+        });
+
+        // Close upload modal
+        closeUploadModal.addEventListener('click', () => {
+            uploadModal.style.display = 'none';
+        });
+
+        cancelUploadBtn.addEventListener('click', () => {
+            uploadModal.style.display = 'none';
+        });
+
+        // Handle file upload
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressDiv.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'در حال بارگذاری فایل...';
+            
+            try {
+                const response = await fetch('/api/meeting/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    progressFill.style.width = '100%';
+                    progressText.textContent = 'رونویسی با موفقیت انجام شد!';
+                    
+                    // Add success message to chat
+                    addMessage('assistant', `✅ فایل با موفقیت رونویسی شد!\n\nشناسه جلسه: ${data.meeting_id}\n${data.message}`);
+                    
+                    // Close modal after 2 seconds
+                    setTimeout(() => {
+                        uploadModal.style.display = 'none';
+                        progressDiv.style.display = 'none';
+                        uploadForm.reset();
+                    }, 2000);
+                } else {
+                    progressText.textContent = `❌ خطا: ${data.error}`;
+                    addMessage('assistant', `❌ خطا در رونویسی: ${data.error}`);
+                }
+            } catch (error) {
+                progressText.textContent = `❌ خطا: ${error.message}`;
+                addMessage('assistant', `❌ خطا: ${error.message}`);
+            }
+        });
+
+        // Send message
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            addMessage('user', message);
+            messageInput.value = '';
+            
+            loadingIndicator.style.display = 'flex';
+            
+            fetch('/api/meeting/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingIndicator.style.display = 'none';
+                if (data.error) {
+                    addMessage('assistant', `❌ خطا: ${data.error}`);
+                } else {
+                    addMessage('assistant', data.response);
+                }
+            })
+            .catch(error => {
+                loadingIndicator.style.display = 'none';
+                addMessage('assistant', `❌ خطا: ${error.message}`);
+            });
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Clear chat
+        clearBtn.addEventListener('click', () => {
+            if (confirm('آیا مطمئن هستید که می‌خواهید گفتگو را پاک کنید؟')) {
+                fetch('/api/meeting/clear', {
+                    method: 'POST'
+                })
+                .then(() => {
+                    chatContainer.innerHTML = `
+                        <div class="welcome-section">
+                            <div class="welcome-icon">
+                                <i class="fas fa-microphone-alt"></i>
+                            </div>
+                            <h2>به دستیار مدیریت جلسات خوش آمدید</h2>
+                            <p>من اینجا هستم تا به شما در رونویسی جلسات، استخراج اقدامات، تولید خلاصه و تحلیل جلسات کمک کنم.</p>
+                        </div>
+                    `;
+                });
+            }
+        });
+
+        // Quick action buttons
+        document.querySelectorAll('.action-card[data-prompt]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const prompt = btn.getAttribute('data-prompt');
+                messageInput.value = prompt;
+                sendMessage();
+            });
+        });
+
+        // Add message to chat
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role === 'user' ? 'user-message' : 'assistant-message'}`;
+            
+            const icon = role === 'user' ? 'fa-user' : 'fa-robot';
+            const messageContent = content.replace(/\n/g, '<br>');
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">${messageContent}</div>
+                    <div class="message-time">${new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+            `;
+            
+            const welcomeSection = chatContainer.querySelector('.welcome-section');
+            if (welcomeSection) {
+                welcomeSection.remove();
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Theme toggle (if exists)
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-theme');
+            });
+        }
+    </script>
+</body>
+</html>
+

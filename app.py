@@ -73,10 +73,34 @@ except Exception as e:
     print(f"⚠️ Finance Agent not available: {str(e)}")
     print("   Task/Event and RAG Agents are still available")
 
+# Initialize Meeting Agent (optional - will fail gracefully if dependencies missing)
+meeting_agent = None
+try:
+    from meeting_agent import MeetingAgent
+    from config import MEETING_DB_PATH, MEETING_MODEL
+    
+    meeting_agent = MeetingAgent(
+        openai_api_key=OPENAI_API_KEY,
+        model=MEETING_MODEL,
+        db_path=MEETING_DB_PATH
+    )
+    print(f"✅ Meeting Agent initialized successfully with {MEETING_MODEL}")
+except ImportError as e:
+    print(f"⚠️ Meeting Agent not available (Import Error): {str(e)}")
+    print("   Please install required packages: pip install soniox pydub")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    print(f"⚠️ Meeting Agent not available: {str(e)}")
+    print("   Other agents are still available")
+    import traceback
+    traceback.print_exc()
+
 # Store active sessions for all agents
 sessions = {}
 rag_sessions = {}
 finance_sessions = {}
+meeting_sessions = {}
 
 
 @app.route('/')
@@ -623,6 +647,145 @@ def list_finance_accounts():
         return jsonify({'error': str(e)}), 500
 
 
+# ==================== MEETING AGENT ROUTES ====================
+
+@app.route('/meeting')
+def meeting_index():
+    """Render Meeting Assistant UI"""
+    if meeting_agent is None:
+        return "Meeting Agent is not available. Please check dependencies.", 503
+    
+    if 'user_id' not in session:
+        session['user_id'] = str(uuid.uuid4())
+    
+    return render_template('meeting_chat.html')
+
+
+@app.route('/api/meeting/chat', methods=['POST'])
+def meeting_chat():
+    """Meeting chat endpoint"""
+    if meeting_agent is None:
+        return jsonify({
+            'error': 'Meeting Agent is not available. Please check dependencies.'
+        }), 503
+    
+    try:
+        data = request.json
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({'error': 'پیام خالی است'}), 400
+        
+        # Get or create thread ID for this user
+        user_id = session.get('user_id', 'default')
+        thread_id = meeting_sessions.get(user_id, f"meeting_{user_id}")
+        meeting_sessions[user_id] = thread_id
+        
+        # Get response from meeting agent
+        print(f"[MEETING DEBUG] User message: {user_message}")
+        response = meeting_agent.chat(user_message, thread_id=thread_id, user_id=user_id)
+        print(f"[MEETING DEBUG] Agent response: {response[:100]}...")
+        
+        return jsonify({
+            'response': response,
+            'timestamp': datetime.now().strftime('%H:%M')
+        })
+    
+    except Exception as e:
+        print(f"[MEETING ERROR] Chat error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'خطا: {str(e)}'}), 500
+
+
+@app.route('/api/meeting/upload', methods=['POST'])
+def meeting_upload():
+    """Upload audio file for transcription"""
+    if meeting_agent is None:
+        return jsonify({
+            'error': 'Meeting Agent is not available. Please check dependencies.'
+        }), 503
+    
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'فایل ارسال نشده است'}), 400
+        
+        file = request.files['file']
+        meeting_title = request.form.get('title', 'جلسه')
+        date = request.form.get('date', '')
+        
+        if file.filename == '':
+            return jsonify({'error': 'نام فایل خالی است'}), 400
+        
+        # Validate file extension
+        from config import MEETING_RECORDINGS_FOLDER
+        from meeting.services.audio_processor import AudioProcessor
+        
+        audio_processor = AudioProcessor(MEETING_RECORDINGS_FOLDER)
+        validation = audio_processor.validate_audio_file(file.filename)
+        
+        if not validation['valid']:
+            return jsonify({'error': validation.get('error', 'فایل نامعتبر')}), 400
+        
+        # Save file
+        user_id = session.get('user_id', 'default')
+        filename = secure_filename(file.filename)
+        file_path = Path(MEETING_RECORDINGS_FOLDER) / f"{user_id}_{filename}"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file.save(str(file_path))
+        
+        # Transcribe
+        if not date:
+            import jdatetime
+            date = jdatetime.date.today().strftime("%Y-%m-%d")
+        
+        result = meeting_agent.transcribe_meeting(
+            audio_path=str(file_path),
+            meeting_title=meeting_title,
+            date=date,
+            user_id=user_id
+        )
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'meeting_id': result.get('meeting_id'),
+                'message': 'رونویسی با موفقیت انجام شد',
+                'transcript': result.get('transcript', '')[:500]  # Preview
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'خطا در رونویسی')
+            }), 500
+    
+    except Exception as e:
+        print(f"[MEETING ERROR] Upload error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'خطا: {str(e)}'}), 500
+
+
+@app.route('/api/meeting/clear', methods=['POST'])
+def meeting_clear():
+    """Clear meeting conversation session"""
+    try:
+        user_id = session.get('user_id', 'default')
+        new_thread_id = f"meeting_{uuid.uuid4()}"
+        meeting_sessions[user_id] = new_thread_id
+        
+        if meeting_agent:
+            meeting_agent.reset_conversation(new_thread_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'گفتگو پاک شد'
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     # Create necessary directories
     os.makedirs('templates', exist_ok=True)
@@ -636,6 +799,12 @@ if __name__ == '__main__':
     print(f"🌐 Server starting at: http://{FLASK_HOST}:{FLASK_PORT}")
     print(f"🤖 AI Model: {DEFAULT_MODEL}")
     print("📱 Features: Modern Chat UI, Jalali Calendar, Task & Event Management")
+    if rag_agent:
+        print(f"📚 RAG Agent: http://{FLASK_HOST}:{FLASK_PORT}/rag")
+    if finance_agent:
+        print(f"💰 Finance Agent: http://{FLASK_HOST}:{FLASK_PORT}/finance")
+    if meeting_agent:
+        print(f"🎤 Meeting Agent: http://{FLASK_HOST}:{FLASK_PORT}/meeting")
     print("=" * 80)
     
     app.run(debug=FLASK_DEBUG, host=FLASK_HOST, port=FLASK_PORT)

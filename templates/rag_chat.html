@@ -40,6 +40,10 @@
                     <i class="fas fa-coins"></i>
                     <span>مدیر مالی (Finance)</span>
                 </a>
+                <a href="/meeting" class="nav-item">
+                    <i class="fas fa-microphone"></i>
+                    <span>مدیریت جلسات (Meeting)</span>
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -51,7 +55,7 @@
         <div class="main-content">
             <div class="container">
                 <!-- Header -->
-                <header class="chat-header">
+                <header class="chat-header" aria-label="ناحیه سربرگ دستیار">
                     <div class="header-content">
                         <div class="header-left">
                             <div class="header-icon">
@@ -66,13 +70,13 @@
                             </div>
                         </div>
                         <div class="header-right">
-                            <button class="icon-btn" id="uploadBtn" title="بارگذاری سند">
+                            <button class="icon-btn" id="uploadBtn" title="بارگذاری سند" aria-label="بارگذاری سند">
                                 <i class="fas fa-upload"></i>
                             </button>
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="حالت تاریک/روشن">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="حالت تاریک/روشن" aria-label="تغییر حالت تاریک/روشن">
                                 <i class="fas fa-moon"></i>
                             </button>
-                            <button class="icon-btn" id="clearBtn" title="پاک کردن گفتگو">
+                            <button class="icon-btn" id="clearBtn" title="پاک کردن گفتگو" aria-label="پاک کردن گفتگو">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -80,7 +84,7 @@
                 </header>
 
                 <!-- Chat Container -->
-                <main class="chat-container" id="chatContainer">
+                <main class="chat-container" id="chatContainer" role="log" aria-live="polite" aria-label="پنجره چت">
                     <!-- Welcome Message -->
                     <div class="welcome-section">
                         <div class="welcome-icon">

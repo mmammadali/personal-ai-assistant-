@@ -33,8 +33,66 @@ if not OPENAI_API_KEY:
     )
 
 # Model Configuration
-DEFAULT_MODEL = "gpt-4"  # Using gpt-4o-mini (gpt-5-mini doesn't exist yet)
+# Default model for regular queries (fast, cost-effective)
+DEFAULT_MODEL = "gpt-5-mini"
+
+# Complex model for complex queries (better reasoning, higher cost)
+COMPLEX_MODEL = "gpt-5"
+
+# Embedding model
 EMBEDDING_MODEL = "text-embedding-3-large"  # OpenAI embeddings for better quality
+
+# Model selection criteria
+COMPLEX_QUERY_KEYWORDS = [
+    "analyze", "synthesize", "compare", "evaluate", "strategic", "complex",
+    "detailed analysis", "comprehensive", "deep dive", "thorough",
+    "تحلیل", "مقایسه", "ارزیابی", "استراتژیک", "پیچیده", "جامع"
+]
+
+def is_complex_query(query: str) -> bool:
+    """
+    Determine if a query requires the complex model
+    
+    Args:
+        query: User query text
+        
+    Returns:
+        True if query should use complex model, False otherwise
+    """
+    if not query:
+        return False
+    
+    query_lower = query.lower()
+    
+    # Check for complex keywords
+    for keyword in COMPLEX_QUERY_KEYWORDS:
+        if keyword in query_lower:
+            return True
+    
+    # Check query length (longer queries might be complex)
+    if len(query.split()) > 50:
+        return True
+    
+    # Check for multiple questions
+    question_count = query.count('?') + query.count('؟')
+    if question_count > 2:
+        return True
+    
+    return False
+
+def get_model_for_query(query: str = None) -> str:
+    """
+    Get appropriate model for a query
+    
+    Args:
+        query: Optional query text to analyze
+        
+    Returns:
+        Model name to use
+    """
+    if query and is_complex_query(query):
+        return COMPLEX_MODEL
+    return DEFAULT_MODEL
 
 # Flask Configuration
 FLASK_HOST = "127.0.0.1"
@@ -81,7 +139,7 @@ RAG_FAISS_PERSIST_DIR = "./faiss_db"  # FAISS storage directory
 RAG_COLLECTION_NAME = "rag_documents"
 RAG_CHUNK_SIZE = 1000
 RAG_CHUNK_OVERLAP = 200
-RAG_MODEL = "gpt-4o"  # Model for RAG agent
+RAG_MODEL = "gpt-5-mini"  # Model for RAG agent (can use COMPLEX_MODEL for complex queries)
 
 # Pinecone Configuration (if using Pinecone)
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", None)
@@ -97,7 +155,7 @@ MAX_FILE_SIZE_MB = 50
 
 # Finance Database
 FINANCE_DB_PATH = "finance.db"
-FINANCE_MODEL = "gpt-4o"  # Separate model for finance operations
+FINANCE_MODEL = "gpt-5-mini"  # Separate model for finance operations (can use COMPLEX_MODEL for complex analysis)
 
 # Finance Upload & Storage
 FINANCE_UPLOAD_FOLDER = "finance_uploads"
@@ -151,4 +209,24 @@ BURN_RATE_CALCULATION_DAYS = 30  # Calculate burn rate over 30 days
 REPORT_DEFAULT_FORMAT = "pdf"
 REPORT_JALALI_CALENDAR = True
 REPORT_INCLUDE_CHARTS = True
+
+# ==================== MEETING ASSISTANT CONFIGURATION ====================
+
+# Soniox API Configuration
+SONIOX_API_KEY = os.getenv("SONIOX_API_KEY", "")
+SONIOX_LANGUAGE = "fa-IR"  # Farsi/Persian language code
+
+# Meeting Database
+MEETING_DB_PATH = "meeting.db"
+MEETING_MODEL = "gpt-4o"  # Model for meeting analysis
+
+# Meeting Upload & Storage
+MEETING_UPLOAD_FOLDER = "meeting_uploads"
+MEETING_RECORDINGS_FOLDER = "meeting_recordings"
+MEETING_TRANSCRIPTS_FOLDER = "meeting_transcripts"
+MEETING_REPORTS_FOLDER = "meeting_reports"
+
+# Meeting Settings
+MEETING_DEFAULT_FORMAT = "pdf"
+MEETING_JALALI_CALENDAR = True
 

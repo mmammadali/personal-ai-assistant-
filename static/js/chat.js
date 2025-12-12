@@ -16,6 +16,17 @@ let messageHistory = [];
 
 // ==================== INITIALIZE ====================
 function initializeChat() {
+    // Accessibility helpers
+    if (chatContainer) {
+        chatContainer.setAttribute('role', 'log');
+        chatContainer.setAttribute('aria-live', 'polite');
+        chatContainer.setAttribute('aria-label', 'پیام‌های دستیار');
+    }
+    messageInput.setAttribute('aria-label', 'نوشتن پیام');
+    sendBtn.setAttribute('aria-label', 'ارسال پیام');
+    clearBtn.setAttribute('aria-label', 'پاک کردن گفتگو');
+    themeToggle.setAttribute('aria-label', 'تغییر تم');
+
     // Load theme preference
     loadThemePreference();
     
@@ -270,9 +281,9 @@ function hideLoading() {
 }
 
 function scrollToBottom() {
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
-    }, 100);
+    });
 }
 
 function autoResizeTextarea() {
@@ -281,27 +292,14 @@ function autoResizeTextarea() {
 }
 
 function showNotification(message, type = 'info') {
-    // Create notification element
     const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        padding: 1rem 1.5rem;
-        background: ${type === 'success' ? '#10a37f' : '#ef4444'};
-        color: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-        animation: slideIn 0.3s ease;
-    `;
+    notification.className = `toast ${type}`;
     notification.textContent = message;
-    
     document.body.appendChild(notification);
-    
-    // Remove after 3 seconds
+
+    // Auto-hide
     setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
+        notification.classList.add('hide');
         setTimeout(() => notification.remove(), 300);
     }, 3000);
 }
@@ -309,29 +307,37 @@ function showNotification(message, type = 'info') {
 // ==================== ANIMATIONS ====================
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+    .toast {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        padding: 1rem 1.25rem;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        z-index: 1100;
+        animation: slideIn 0.3s ease;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
     }
-    
+    .toast.success { border-color: #10a37f; }
+    .toast.error { border-color: #ef4444; }
+    .toast.hide { animation: slideOut 0.3s ease forwards; }
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
     @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(120%); opacity: 0; }
     }
 `;
 document.head.appendChild(style);
+
+
+
 
 
 

@@ -51,7 +51,7 @@ function addMessage(content, isUser = false) {
     }
     
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+    messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
     
     const avatar = document.createElement('div');
     avatar.className = 'message-avatar';
@@ -59,23 +59,24 @@ function addMessage(content, isUser = false) {
         '<i class="fas fa-user"></i>' : 
         '<i class="fas fa-robot"></i>';
     
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-    
-    // Format content with markdown-style support
-    const formattedContent = formatMessage(content);
-    contentDiv.innerHTML = formattedContent;
-    
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'message-content';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.innerHTML = formatMessage(content);
+
     const timestamp = document.createElement('div');
-    timestamp.className = 'message-timestamp';
+    timestamp.className = 'message-time';
     timestamp.textContent = new Date().toLocaleTimeString('fa-IR', {
         hour: '2-digit',
         minute: '2-digit'
     });
-    
-    contentDiv.appendChild(timestamp);
+
+    contentWrapper.appendChild(bubble);
+    contentWrapper.appendChild(timestamp);
     messageDiv.appendChild(avatar);
-    messageDiv.appendChild(contentDiv);
+    messageDiv.appendChild(contentWrapper);
     chatContainer.appendChild(messageDiv);
     
     // Scroll to bottom

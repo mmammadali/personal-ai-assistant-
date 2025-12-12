@@ -7,6 +7,7 @@ from typing import Optional, List, Dict, Any
 import jdatetime
 import re
 from database import DatabaseManager
+from intelligence.date_parser import NaturalDateParser
 
 
 # Initialize database manager
@@ -28,6 +29,12 @@ def validate_jalali_date(date_str: str) -> str:
     """
     # Remove extra spaces
     date_str = date_str.strip()
+    
+    # Try natural language parsing first (Persian/English, relative, weekdays)
+    parser = NaturalDateParser()
+    parsed_natural = parser.parse(date_str)
+    if parsed_natural:
+        date_str = parsed_natural
     
     # Replace forward slashes with hyphens
     date_str = date_str.replace("/", "-")
@@ -54,7 +61,8 @@ def create_event_tool(
     title: str,
     attendee: Optional[str] = None,
     description: Optional[str] = None,
-    location: Optional[str] = None
+    location: Optional[str] = None,
+    attendees: Optional[List[str]] = None
 ) -> str:
     """
     Create a new calendar event.
@@ -62,9 +70,10 @@ def create_event_tool(
     Args:
         date: Event date in Jalali format (YYYY-MM-DD or YYYY/MM/DD). REQUIRED.
         title: Event title. REQUIRED.
-        attendee: Name of attendee(s). OPTIONAL.
+        attendee: Name of single attendee (for backward compatibility). OPTIONAL.
         description: Event description. OPTIONAL.
         location: Event location. OPTIONAL.
+        attendees: List of attendee names (takes precedence over attendee). OPTIONAL.
         
     Returns:
         Success message with event ID
@@ -81,10 +90,15 @@ def create_event_tool(
             title=title,
             attendee=attendee,
             description=description,
-            location=location
+            location=location,
+            attendees=attendees
         )
         
-        return f"✅ Event created successfully! Event ID: {event_id}, Date: {normalized_date}, Title: {title}"
+        # Get created event to show attendees
+        event = db.get_event_by_id(event_id)
+        attendees_str = ", ".join(event.get('attendees', [])) if event and event.get('attendees') else (attendee or "None")
+        
+        return f"✅ Event created successfully! Event ID: {event_id}, Date: {normalized_date}, Title: {title}, Attendees: {attendees_str}"
     
     except ValueError as e:
         return f"❌ Date validation error: {str(e)}"
@@ -114,11 +128,10 @@ def get_event_tool(
     try:
         # Normalize date if provided
         if date:
-            # Allow partial dates for queries
-            if date.count("-") == 2 or date.count("/") == 2:
-                date = validate_jalali_date(date)
-            else:
-                # Partial date, just normalize separators
+            parsed = NaturalDateParser().parse(date)
+            if parsed:
+                date = parsed
+            elif date:
                 date = date.replace("/", "-")
         
         # Query database
@@ -140,8 +153,15 @@ def get_event_tool(
         for i, event in enumerate(events, 1):
             result += f"{i}. **{event['title']}**\n"
             result += f"   📆 Date: {event['date']}\n"
-            if event['attendee']:
-                result += f"   👤 Attendee: {event['attendee']}\n"
+            # Show attendees from new table or legacy field
+            attendees = event.get('attendees', [])
+            if not attendees and event.get('attendee'):
+                attendees = [event['attendee']]
+            if attendees:
+                if len(attendees) == 1:
+                    result += f"   👤 Attendee: {attendees[0]}\n"
+                else:
+                    result += f"   👥 Attendees: {', '.join(attendees)}\n"
             if event['description']:
                 result += f"   📝 Description: {event['description']}\n"
             if event['location']:
@@ -152,6 +172,111 @@ def get_event_tool(
     
     except Exception as e:
         return f"❌ Error retrieving events: {str(e)}"
+
+
+@tool
+def update_event_tool(
+    event_id: int,
+    date: Optional[str] = None,
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    location: Optional[str] = None,
+    attendees: Optional[List[str]] = None
+) -> str:
+    """
+    Update an existing calendar event. You can update any field(s) of the event.
+    
+    Args:
+        event_id: Event ID to update. REQUIRED.
+        date: New event date in Jalali format (YYYY-MM-DD or YYYY/MM/DD). OPTIONAL.
+        title: New event title. OPTIONAL.
+        description: New event description. OPTIONAL.
+        location: New event location. OPTIONAL.
+        attendees: New list of attendee names (replaces all existing attendees). OPTIONAL.
+        
+    Returns:
+        Success message with updated event details
+        
+    Note: This tool should only be called after user confirmation.
+          Provide at least one field to update (besides event_id).
+    """
+    try:
+        # Check if event exists
+        event = db.get_event_by_id(event_id)
+        if not event:
+            return f"❌ Event with ID {event_id} not found."
+        
+        # Normalize date if provided
+        normalized_date = None
+        if date:
+            normalized_date = validate_jalali_date(date)
+        
+        # Update event
+        success = db.update_event(
+            event_id=event_id,
+            date=normalized_date,
+            title=title,
+            description=description,
+            location=location,
+            attendees=attendees
+        )
+        
+        if not success:
+            return f"❌ Failed to update event with ID {event_id}"
+        
+        # Get updated event to show changes
+        updated_event = db.get_event_by_id(event_id)
+        attendees_list = updated_event.get('attendees', [])
+        attendees_str = ", ".join(attendees_list) if attendees_list else "None"
+        
+        result = f"✅ Event updated successfully!\n"
+        result += f"   🆔 Event ID: {event_id}\n"
+        result += f"   📆 Date: {updated_event['date']}\n"
+        result += f"   📝 Title: {updated_event['title']}\n"
+        if updated_event.get('description'):
+            result += f"   📄 Description: {updated_event['description']}\n"
+        if updated_event.get('location'):
+            result += f"   📍 Location: {updated_event['location']}\n"
+        result += f"   👥 Attendees: {attendees_str}\n"
+        
+        return result
+    
+    except ValueError as e:
+        return f"❌ Date validation error: {str(e)}"
+    except Exception as e:
+        return f"❌ Error updating event: {str(e)}"
+
+
+@tool
+def delete_event_tool(event_id: int) -> str:
+    """
+    Delete a calendar event permanently.
+    
+    Args:
+        event_id: Event ID to delete. REQUIRED.
+        
+    Returns:
+        Success message or error
+        
+    Note: This tool should only be called after user confirmation.
+          This action cannot be undone.
+    """
+    try:
+        # Check if event exists and get details for confirmation message
+        event = db.get_event_by_id(event_id)
+        if not event:
+            return f"❌ Event with ID {event_id} not found."
+        
+        # Delete event
+        success = db.delete_event(event_id)
+        
+        if success:
+            return f"✅ Event deleted successfully!\n   🆔 Event ID: {event_id}\n   📝 Title: {event['title']}\n   📆 Date: {event['date']}"
+        else:
+            return f"❌ Failed to delete event with ID {event_id}"
+    
+    except Exception as e:
+        return f"❌ Error deleting event: {str(e)}"
 
 
 # ===================== TASK TOOLS =====================
@@ -226,10 +351,11 @@ def get_task_tool(
     try:
         # Normalize date if provided
         if due_date:
-            if due_date.count("-") == 2 or due_date.count("/") == 2:
-                due_date = validate_jalali_date(due_date)
+            parsed = NaturalDateParser().parse(due_date)
+            if parsed:
+                due_date = parsed
             else:
-                due_date = due_date.replace("/", "-")
+                due_date = validate_jalali_date(due_date)
         
         # Query database
         tasks = db.get_tasks(due_date=due_date, project=project, status=status, description=description, attendant=attendant)
@@ -313,10 +439,11 @@ def update_task_status_tool(
         # Otherwise, search for the task using provided criteria
         # Normalize date if provided
         if due_date:
-            if due_date.count("-") == 2 or due_date.count("/") == 2:
-                due_date = validate_jalali_date(due_date)
+            parsed = NaturalDateParser().parse(due_date)
+            if parsed:
+                due_date = parsed
             else:
-                due_date = due_date.replace("/", "-")
+                due_date = validate_jalali_date(due_date)
         
         # Search for matching tasks using all provided criteria
         tasks = db.get_tasks(due_date=due_date, project=project, description=description, attendant=attendant)
@@ -362,12 +489,133 @@ def update_task_status_tool(
         return f"❌ Error updating task status: {str(e)}"
 
 
+# Import calendar optimization tools
+try:
+    from intelligence.tools.calendar_tools import CALENDAR_TOOLS
+    CALENDAR_TOOLS_AVAILABLE = True
+except ImportError:
+    CALENDAR_TOOLS_AVAILABLE = False
+    CALENDAR_TOOLS = []
+
+# Import task prediction tools
+try:
+    from intelligence.tools.task_prediction_tools import TASK_PREDICTION_TOOLS
+    TASK_PREDICTION_TOOLS_AVAILABLE = True
+except ImportError:
+    TASK_PREDICTION_TOOLS_AVAILABLE = False
+    TASK_PREDICTION_TOOLS = []
+
+# Import reminder tools
+try:
+    from intelligence.tools.reminder_tools import REMINDER_TOOLS
+    REMINDER_TOOLS_AVAILABLE = True
+except ImportError:
+    REMINDER_TOOLS_AVAILABLE = False
+    REMINDER_TOOLS = []
+
+# Import notification tools
+try:
+    from intelligence.tools.notification_tools import NOTIFICATION_TOOLS
+    NOTIFICATION_TOOLS_AVAILABLE = True
+except ImportError:
+    NOTIFICATION_TOOLS_AVAILABLE = False
+    NOTIFICATION_TOOLS = []
+
+# Import summary tools
+try:
+    from intelligence.tools.summary_tools import SUMMARY_TOOLS
+    SUMMARY_TOOLS_AVAILABLE = True
+except ImportError:
+    SUMMARY_TOOLS_AVAILABLE = False
+    SUMMARY_TOOLS = []
+
+# Import search tools
+try:
+    from intelligence.tools.search_tools import SEARCH_TOOLS
+    SEARCH_TOOLS_AVAILABLE = True
+except ImportError:
+    SEARCH_TOOLS_AVAILABLE = False
+    SEARCH_TOOLS = []
+
 # Export all tools
 ALL_TOOLS = [
     create_event_tool,
     get_event_tool,
+    update_event_tool,
+    delete_event_tool,
     create_task_tool,
     get_task_tool,
     update_task_status_tool
 ]
+
+# Add calendar tools if available
+if CALENDAR_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(CALENDAR_TOOLS)
+
+# Add task prediction tools if available
+if TASK_PREDICTION_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(TASK_PREDICTION_TOOLS)
+
+# Add reminder tools if available
+if REMINDER_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(REMINDER_TOOLS)
+
+# Add notification tools if available
+if NOTIFICATION_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(NOTIFICATION_TOOLS)
+
+# Add summary tools if available
+if SUMMARY_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(SUMMARY_TOOLS)
+
+# Add search tools if available
+if SEARCH_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(SEARCH_TOOLS)
+
+# ===================== PHASE 2 TOOLS =====================
+
+# Import insight tools (Phase 2.1)
+try:
+    from intelligence.tools.insight_tools import ALL_INSIGHT_TOOLS
+    INSIGHT_TOOLS_AVAILABLE = True
+except ImportError:
+    INSIGHT_TOOLS_AVAILABLE = False
+    ALL_INSIGHT_TOOLS = []
+
+# Import learning tools (Phase 2.2)
+try:
+    from intelligence.tools.learning_tools import ALL_LEARNING_TOOLS
+    LEARNING_TOOLS_AVAILABLE = True
+except ImportError:
+    LEARNING_TOOLS_AVAILABLE = False
+    ALL_LEARNING_TOOLS = []
+
+# Import automation tools (Phase 2.3)
+try:
+    from intelligence.tools.automation_tools import ALL_AUTOMATION_TOOLS
+    AUTOMATION_TOOLS_AVAILABLE = True
+except ImportError:
+    AUTOMATION_TOOLS_AVAILABLE = False
+    ALL_AUTOMATION_TOOLS = []
+
+# Import document tools (Phase 2.10)
+try:
+    from intelligence.tools.document_tools import ALL_DOCUMENT_TOOLS
+    DOCUMENT_TOOLS_AVAILABLE = True
+except ImportError:
+    DOCUMENT_TOOLS_AVAILABLE = False
+    ALL_DOCUMENT_TOOLS = []
+
+# Add Phase 2 tools if available
+if INSIGHT_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(ALL_INSIGHT_TOOLS)
+
+if LEARNING_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(ALL_LEARNING_TOOLS)
+
+if AUTOMATION_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(ALL_AUTOMATION_TOOLS)
+
+if DOCUMENT_TOOLS_AVAILABLE:
+    ALL_TOOLS.extend(ALL_DOCUMENT_TOOLS)
 
